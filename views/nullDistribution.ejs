@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Null Distribution</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Null Distribution for Table: <%= table %>
+    </h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Column</th>
+                <th>Total Rows</th>
+                <th>Null Rows</th>
+                <th>Not Null Rows</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (const [column, stats] of Object.entries(nullDistribution)) { %>
+                <tr>
+                    <td>
+                        <%= column %>
+                    </td>
+                    <td>
+                        <%= stats.total_rows %>
+                    </td>
+                    <td>
+                        <%= stats.null_rows %>
+                    </td>
+                    <td>
+                        <%= stats.not_null_rows %>
+                    </td>
+                </tr>
+                <% } %>
+        </tbody>
+    </table>
+</body>
+
+</html>
