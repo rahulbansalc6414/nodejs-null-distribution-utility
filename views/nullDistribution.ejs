@@ -4,22 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Null Distribution</title>
+    <title>Null Distribution for <%= table %>
+    </title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
         table {
             border-collapse: collapse;
             width: 100%;
+            margin-top: 20px;
         }
 
         th,
         td {
             border: 1px solid #ddd;
             padding: 8px;
+            text-align: left;
         }
 
         th {
-            background-color: #f2f2f2;
-            text-align: left;
+            background-color: #f4f4f4;
+        }
+
+        caption {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .summary {
+            margin-bottom: 20px;
+        }
+
+        .summary h2 {
+            margin: 0 0 10px;
+        }
+
+        .summary p {
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -27,7 +51,25 @@
 <body>
     <h1>Null Distribution for Table: <%= table %>
     </h1>
+
+    <div class="summary">
+        <h2>Summary Statistics</h2>
+        <p><strong>Total Rows Scanned:</strong>
+            <%= summary.total_rows_scanned %>
+        </p>
+        <p><strong>Number of Columns Analyzed:</strong>
+            <%= summary.no_of_columns_analyzed %>
+        </p>
+        <p><strong>Columns with Null Values:</strong>
+            <%= summary.no_of_columns_having_null_values %>
+        </p>
+        <p><strong>Columns without Null Values:</strong>
+            <%= summary.no_of_columns_having_no_nulls %>
+        </p>
+    </div>
+
     <table>
+        <caption>Column-wise Null Distribution</caption>
         <thead>
             <tr>
                 <th>Column</th>

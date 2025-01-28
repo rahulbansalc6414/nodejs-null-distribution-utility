@@ -1,12 +1,12 @@
 # Node.js Null Distribution Analyzer
 
-This Node.js project analyzes the null distribution of columns in a specified database table. It exposes APIs to retrieve the null distribution in both JSON and HTML formats. The application is configurable through a `.env` file for database credentials, server settings, and defaults.
+This Node.js project analyzes the null distribution of columns in a specified database table. It exposes APIs to retrieve the null distribution in both JSON and HTML formats. The application is configurable through a `.env` file.
 
 ## Features
 
-- Fetches data from any relational database table.
 - Calculates the distribution of null values for each column.
 - Sorts columns by the number of null values in descending order.
+- Only scans a limited number of rows, configurable via `DEFAULT_LIMIT`
 - Outputs results in JSON or HTML format.
 - Fully customizable via `.env` file.
 
@@ -75,6 +75,12 @@ curl "http://localhost:3000/table-null-distribution?table=your_table_name&limit=
 {
   "table": "your_table_name",
   "limit": 50,
+  "summary": {
+    "total_rows_scanned": 50,
+    "no_of_columns_analyzed": 2,
+    "no_of_columns_having_null_values": 2,
+    "no_of_columns_having_no_nulls": 0
+  },
   "null_distribution": {
     "column1": {
       "total_rows": 50,

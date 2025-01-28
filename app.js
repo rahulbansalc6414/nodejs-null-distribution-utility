@@ -27,7 +27,7 @@ const DEFAULT_LIMIT = parseInt(process.env.DEFAULT_LIMIT, 10) || 100;
  * Fetch null distribution for a given table.
  * @param {string} table - Table name.
  * @param {number} limit - Number of rows to fetch.
- * @returns {Object} - Null distribution result.
+ * @returns {Object} - Null distribution result with summary statistics.
  */
 async function getNullDistribution(table, limit)
 {
@@ -61,6 +61,8 @@ async function getNullDistribution(table, limit)
         // Analyze null distribution
         const nullDistribution = {};
         const totalRows = rows.length;
+        let columnsHavingNulls = 0;
+        let columnsWithoutNulls = 0;
 
         // Iterate over all columns
         const columns = Object.keys(rows[0]);
@@ -74,11 +76,20 @@ async function getNullDistribution(table, limit)
                     nullRows++;
                 }
             }
+            const notNullRows = totalRows - nullRows;
             nullDistribution[column] = {
                 total_rows: totalRows,
                 null_rows: nullRows,
-                not_null_rows: totalRows - nullRows,
+                not_null_rows: notNullRows,
             };
+
+            if (nullRows > 0)
+            {
+                columnsHavingNulls++;
+            } else
+            {
+                columnsWithoutNulls++;
+            }
         }
 
         // Sort by null_rows in descending order
@@ -90,7 +101,15 @@ async function getNullDistribution(table, limit)
                 return acc;
             }, {});
 
-        return { table, limit, null_distribution: sortedDistribution };
+        // Summary statistics
+        const summary = {
+            total_rows_scanned: totalRows,
+            no_of_columns_analyzed: columns.length,
+            no_of_columns_having_null_values: columnsHavingNulls,
+            no_of_columns_having_no_nulls: columnsWithoutNulls,
+        };
+
+        return { table, limit, summary, null_distribution: sortedDistribution };
     } catch (error)
     {
         console.error('Error:', error);
@@ -136,9 +155,9 @@ app.get('/table-null-distribution-html', async (req, res) =>
     try
     {
         const result = await getNullDistribution(table, fetchLimit);
-        const { null_distribution: nullDistribution } = result;
+        const { summary, null_distribution: nullDistribution } = result;
 
-        res.render('nullDistribution', { table, nullDistribution });
+        res.render('nullDistribution', { table, summary, nullDistribution });
     } catch (error)
     {
         res.status(500).send(`<h1>Error: ${error.message}</h1>`);
