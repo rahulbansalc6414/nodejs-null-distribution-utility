@@ -13,7 +13,7 @@ This Node.js project analyzes the null distribution of columns in a specified da
 ## Requirements
 
 - Node.js (v14 or higher)
-- A relational database (e.g., MySQL, PostgreSQL, etc.)
+- A relational database (only mysql for now)
 
 ## Installation
 
