@@ -6,7 +6,7 @@ This Node.js project analyzes the null distribution of columns in a specified da
 
 - Calculates the distribution of null values for each column.
 - Sorts columns by the number of null values in descending order.
-- Only scans a limited number of rows, configurable via `DEFAULT_LIMIT`
+- Intelligently limits the no_of_rows to be scanned, configurable via `DEFAULT_LIMIT`
 - Outputs results in JSON or HTML format.
 - Fully customizable via `.env` file.
 
