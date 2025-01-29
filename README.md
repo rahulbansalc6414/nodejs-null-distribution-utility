@@ -4,7 +4,7 @@ This Node.js project analyzes the null distribution of columns in a specified da
 
 ## Features
 
-- Calculates the distribution of null values for each column.
+- You just need to provide the table name, it will automatically calculate the distribution of null values for every column.
 - Sorts columns by the number of null values in descending order.
 - Intelligently limits the no_of_rows to be scanned, configurable via `DEFAULT_LIMIT`
 - Outputs results in JSON or HTML format.
@@ -13,7 +13,7 @@ This Node.js project analyzes the null distribution of columns in a specified da
 ## Requirements
 
 - Node.js (v14 or higher)
-- A relational database (only mysql for now)
+- A relational database (it works with mysql/postgresql)
 
 ## Installation
 

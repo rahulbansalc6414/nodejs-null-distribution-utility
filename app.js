@@ -1,6 +1,7 @@
 // Import necessary modules
 const express = require('express');
 const mysql = require('mysql2/promise');
+const { Client } = require('pg');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -22,6 +23,77 @@ const dbConfig = {
 };
 
 const DEFAULT_LIMIT = parseInt(process.env.DEFAULT_LIMIT, 10) || 100;
+const isDbMysql = process.env.IS_DB_MYSQL === 'true';
+const isDbPostgres = process.env.IS_DB_POSTGRES === 'true';
+
+
+/**
+ * Fetch data from MySQL database.
+ * @param {string} table - Table name.
+ * @param {number} limit - Number of rows to fetch.
+ * @returns {Array} - Rows from the table.
+ */
+async function getDataFromMysql(table, limit)
+{
+    const connection = await mysql.createConnection(dbConfig);
+
+    // Fetch the primary key column
+    const [primaryKeyResult] = await connection.query(
+        `SHOW KEYS FROM \`${table}\` WHERE Key_name = 'PRIMARY'`
+    );
+    if (!primaryKeyResult.length)
+    {
+        throw new Error(`No primary key found for table '${table}'.`);
+    }
+    const primaryKey = primaryKeyResult[0].Column_name;
+
+    // Fetch data from the table
+    const [rows] = await connection.query(
+        `SELECT * FROM \`${table}\` ORDER BY \`${primaryKey}\` DESC LIMIT ?`,
+        [limit]
+    );
+    await connection.end();
+    return rows;
+}/**
+ * Fetch data from PostgreSQL database.
+ * @param {string} table - Table name.
+ * @param {number} limit - Number of rows to fetch.
+ * @returns {Array} - Rows from the table.
+ */
+async function getDataFromPostgres(table, limit)
+{
+    const client = new Client({
+        ...dbConfig, ssl: {
+            rejectUnauthorized: false
+        }
+    })
+
+    await client.connect();
+
+    // Fetch the primary key column
+    const primaryKeyResult = await client.query(
+        `SELECT a.attname
+         FROM pg_index i
+         JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+         WHERE i.indrelid = '${table}'::regclass AND i.indisprimary`
+    );
+
+    if (!primaryKeyResult.rows.length)
+    {
+        throw new Error(`No primary key found for table '${table}'.`);
+    }
+
+    const primaryKey = primaryKeyResult.rows[0].attname;
+
+    // Fetch data from the table
+    const res = await client.query(
+        `SELECT * FROM ${table} ORDER BY ${primaryKey} DESC LIMIT $1`,
+        [limit]
+    );
+
+    await client.end();
+    return res.rows;
+}
 
 /**
  * Fetch null distribution for a given table.
@@ -31,27 +103,19 @@ const DEFAULT_LIMIT = parseInt(process.env.DEFAULT_LIMIT, 10) || 100;
  */
 async function getNullDistribution(table, limit)
 {
-    let connection;
     try
     {
-        // Create a database connection
-        connection = await mysql.createConnection(dbConfig);
-
-        // Fetch the primary key column
-        const [primaryKeyResult] = await connection.query(
-            `SHOW KEYS FROM \`${table}\` WHERE Key_name = 'PRIMARY'`
-        );
-        if (!primaryKeyResult.length)
+        let rows;
+        if (isDbMysql)
         {
-            throw new Error(`No primary key found for table '${table}'.`);
+            rows = await getDataFromMysql(table, limit);
+        } else if (isDbPostgres)
+        {
+            rows = await getDataFromPostgres(table, limit);
+        } else
+        {
+            throw new Error('No valid database configuration found.');
         }
-        const primaryKey = primaryKeyResult[0].Column_name;
-
-        // Fetch data from the table
-        const [rows] = await connection.query(
-            `SELECT * FROM \`${table}\` ORDER BY \`${primaryKey}\` DESC LIMIT ?`,
-            [limit]
-        );
 
         if (!rows.length)
         {
@@ -114,9 +178,6 @@ async function getNullDistribution(table, limit)
     {
         console.error('Error:', error);
         throw error;
-    } finally
-    {
-        if (connection) await connection.end();
     }
 }
 
